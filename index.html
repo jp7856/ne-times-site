@@ -147,8 +147,11 @@ footer{background:var(--navy);color:#8899bb;font-size:11px;text-align:center;pad
 
 <script>
 // ────────────────────────────────────────────────
-// 설정: 파이프라인 서버 주소 (Railway v4)
-const API_BASE = "https://web-production-8adb9.up.railway.app";
+// 파이프라인 서버 주소 (v4 + v2 병합)
+const API_BASES = [
+  "https://web-production-8adb9.up.railway.app",  // v4
+  "https://web-production-d55ca.up.railway.app",  // v2
+];
 // ────────────────────────────────────────────────
 
 const LEVELS = [
@@ -303,21 +306,24 @@ function closeArticle() {
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeArticle(); });
 
 async function load() {
-  try {
-    const res = await fetch(API_BASE + "/api/published");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    _articles = (await res.json()).reverse(); // 최신순
-    renderTabs();
-    renderList();
-  } catch (e) {
+  const results = await Promise.allSettled(
+    API_BASES.map(base => fetch(base + "/api/published").then(r => r.ok ? r.json() : []))
+  );
+  const all = results.flatMap(r => r.status === "fulfilled" ? r.value : []);
+  if (all.length === 0) {
     document.getElementById("content").innerHTML = `
       <div class="state-box">
         <div class="state-icon">⚠️</div>
         <div class="state-title">기사를 불러오지 못했습니다</div>
-        <div class="state-msg">파이프라인 서버에 연결할 수 없습니다.<br>${esc(e.message)}</div>
+        <div class="state-msg">파이프라인 서버에 연결할 수 없습니다.</div>
       </div>`;
     renderTabs();
+    return;
   }
+  // created_at 기준 최신순 정렬
+  _articles = all.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  renderTabs();
+  renderList();
 }
 
 load();
