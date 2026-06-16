@@ -304,9 +304,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeArticle
 
 async function load() {
   try {
-    const res = await fetch(API_BASE + "/api/published");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    _articles = (await res.json()).reverse(); // 최신순
+    // 발행 사이트가 ne-times-site2로 이전됐습니다
+    _articles = [];
     renderTabs();
     renderList();
   } catch (e) {
