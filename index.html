@@ -320,8 +320,8 @@ async function load() {
     renderTabs();
     return;
   }
-  // created_at 기준 최신순 정렬
-  _articles = all.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  // created_at 기준 최신순 정렬 (v4/v2 날짜 형식 혼재 대응 — Date 파싱)
+  _articles = all.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   renderTabs();
   renderList();
 }
